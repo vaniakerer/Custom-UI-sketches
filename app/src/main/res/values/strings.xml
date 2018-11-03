@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">CustomViews</string>
+    <string name="apply">Apply</string>
+    <string name="simple_progress">Simple Progress</string>
+</resources>

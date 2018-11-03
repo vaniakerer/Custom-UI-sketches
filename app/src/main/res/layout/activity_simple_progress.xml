@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <com.example.ivan.customviews.simple_progress.ProgressView
+        android:id="@+id/simple_progress_progress_view"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/simple_progress_height"
+        android:layout_margin="@dimen/default_view_offset"
+        app:pv_animate_progress_changes="true"
+        app:pv_progress_color="@color/colorAccent"
+        app:pv_track_color="@color/colorPrimaryDark" />
+
+    <EditText
+        android:id="@+id/simple_progress_etxt_new_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/default_view_offset"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/simple_progress_btn_apply_changes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/default_view_offset"
+        android:text="@string/apply" />
+</LinearLayout>
