@@ -16,13 +16,10 @@
         android:layout_margin="@dimen/default_view_offset"
         android:text="@string/simple_progress" />
 
-    <com.example.ivan.customviews.circular_progress.CircularProgressView
-        android:layout_width="100dp"
-        android:layout_height="100dp" />
-
     <Button
+        android:id="@+id/main_btn_chart_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/default_view_offset"
-        android:text="@string/simple_progress" />
+        android:text="@string/chart_view" />
 </LinearLayout>

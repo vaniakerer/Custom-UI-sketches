@@ -3,4 +3,9 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+    <color name="colorChartPoint">#1592d9</color>
+    <color name="colorChartLine">#1592d9</color>
+    <color name="colorChartGradientStart">#63c7ff</color>
+    <color name="colorChartGradientEnd">#00000000</color>
 </resources>
