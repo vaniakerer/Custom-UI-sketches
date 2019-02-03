@@ -26,6 +26,13 @@
         <activity
             android:name=".chart.ChartActivity"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".bottom_nav.BottomNavActivity"
+            android:screenOrientation="portrait" />
+
+        <activity android:name=".anim_check_box.AnimCheckBoxActivity"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>
