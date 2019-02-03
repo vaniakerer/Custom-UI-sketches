@@ -1,9 +1,11 @@
 package com.example.ivan.customviews.chart
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.AccelerateInterpolator
 import android.widget.TextView
 import android.widget.Toast
 import com.example.ivan.customviews.R
@@ -17,6 +19,7 @@ class ChartView @JvmOverloads constructor(
         set(value) {
             field = value
             calculateMarkersPositions()
+            animateChart()
         }
 
     private var pxPerUnit: Int? = null
@@ -44,6 +47,8 @@ class ChartView @JvmOverloads constructor(
 
     private lateinit var weeks: ArrayList<String>
 
+    private val chartProgressValueAnimator = ValueAnimator.ofFloat(0f, 1f)
+    private var drawProgressOffset = 0f//0..1
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
@@ -55,7 +60,7 @@ class ChartView @JvmOverloads constructor(
         drawPoints(canvas)
         try {
             drawWeeks(canvas)
-        } catch (ex: Exception){
+        } catch (ex: Exception) {
             textLog.setText(ex.message)
             Toast.makeText(context, ex.message, Toast.LENGTH_LONG).show()
         }
@@ -66,18 +71,30 @@ class ChartView @JvmOverloads constructor(
         var previousMarker: Marker? = null
         for (currentMarker in markers!!) {
             if (previousMarker != null) {
+                var currentX = currentMarker.point.x
+                val shouldStopDraw = currentX > measuredWidth * drawProgressOffset
+                if(shouldStopDraw)
+                    currentX = measuredWidth * drawProgressOffset
+
                 canvas.drawLine(
                         previousMarker.point.x, previousMarker.point.y,
-                        currentMarker.point.x, currentMarker.point.y,
+                        currentX, currentMarker.point.y,
                         linePaint
                 )
+
+                textLog.text = currentX.toString()
+
+                if (shouldStopDraw) return
             }
             previousMarker = currentMarker
         }
     }
 
     private fun drawPoints(canvas: Canvas) {
-        markers?.forEach { canvas.drawCircle(it.point.x, it.point.y, 10f, pointsPaint) }
+        markers?.forEach {
+            if (it.point.x / measuredWidth < drawProgressOffset)
+                canvas.drawCircle(it.point.x, it.point.y, 10f, pointsPaint)
+        }
     }
 
     private fun drawGradient(canvas: Canvas) {
@@ -102,14 +119,12 @@ class ChartView @JvmOverloads constructor(
             val separatorsAmount = markers?.size!! / 7
             for (i in 1..separatorsAmount) {
                 val x = (measuredWidth / separatorsAmount * i).toFloat()
-                textLog.text = "${textLog.text} \n $i $x"
                 canvas.drawLine(x, 0f, x, zeroY!!.toFloat(), separatorPaint)
             }
         } catch (ex: Exception) {
             Toast
                     .makeText(context, "asfasf ${ex.message}", Toast.LENGTH_LONG)
                     .show()
-
         }
     }
 
@@ -166,6 +181,16 @@ class ChartView @JvmOverloads constructor(
             marker.point.y = y.toFloat()
         }
         invalidate()
+    }
+
+    private fun animateChart() {
+        chartProgressValueAnimator.duration = 3000
+        chartProgressValueAnimator.interpolator = AccelerateInterpolator()
+        chartProgressValueAnimator.addUpdateListener {
+            drawProgressOffset = it.animatedValue as Float
+            invalidate()
+        }
+        chartProgressValueAnimator.start()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
