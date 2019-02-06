@@ -4,7 +4,9 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
+
 
 class AnimCheckBox @JvmOverloads constructor(
         context: Context,
@@ -17,19 +19,17 @@ class AnimCheckBox @JvmOverloads constructor(
     private var checkedColor = Color.CYAN
     private var unCheckedColor = Color.GRAY
 
-    private var size: Float = 150F
-    private var radus: Float = 75F
-    private var strokeWidth = 60F
+    private var radius: Float = 0F
+    private var strokeWidth = 8F //todo hardcoded for xxhdpi
 
     private val checkedPaint = Paint()
-    private val unCheckedPaint = Paint()
+    private val borderPaint = Paint()
 
-    private val clippedArea = Path()
     private val fullArea = Path()
-    private val clipRegion = Region()
+
+    private val centerPoint = PointF()
 
     private var checkOffset = 0F //0..1
-    private val startDrawcheckedFalseBorderOffset = 0.3F
 
     private var checkedChangeValueAnimator: ValueAnimator? = null
 
@@ -38,20 +38,13 @@ class AnimCheckBox @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas?) {
-
-        if (checkOffset <= startDrawcheckedFalseBorderOffset) {
-            val clipedPathRadius = getUncheckedOffset(checkOffset) * strokeWidth
-            clippedArea.addCircle(radus, radus, clipedPathRadius, Path.Direction.CW)
-            canvas?.drawCircle(radus, radus, radus, unCheckedPaint)
-            canvas?.clipPath(clippedArea, Region.Op.REPLACE)
-        } else {
-            canvas?.drawCircle(
-                    radus,
-                    radus,
-                    radus * checkOffset,
-                    checkedPaint
-            )
-        }
+        canvas?.drawCircle(
+                centerPoint.x,
+                centerPoint.y,
+                radius * checkOffset,
+                checkedPaint
+        )
+        canvas?.drawCircle(centerPoint.x, centerPoint.y, radius, borderPaint)
     }
 
     override fun onAttachedToWindow() {
@@ -60,13 +53,20 @@ class AnimCheckBox @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val desiredHeight = radus.toInt()
-        val desiredWidth = radus.toInt()
+        val desiredHeight = radius.toInt()
+        val desiredWidth = radius.toInt()
 
         setMeasuredDimension(
                 measureSize(desiredWidth, widthMeasureSpec),
                 measureSize(desiredHeight, heightMeasureSpec)
         )
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        radius = w / 2 - strokeWidth / 2
+        centerPoint.x = (w / 2).toFloat()
+        centerPoint.y = (h / 2).toFloat()
     }
 
     fun setChecked(checked: Boolean) {
@@ -83,12 +83,11 @@ class AnimCheckBox @JvmOverloads constructor(
             invalidate()
         }
 
-        checkedChangeValueAnimator?.duration = 3000
+        checkedChangeValueAnimator?.duration = 300
 
         this.isChecked = checked
 
         checkedChangeValueAnimator?.start()
-
     }
 
     private fun measureSize(desiredSize: Int, measureSpec: Int): Int {
@@ -103,20 +102,19 @@ class AnimCheckBox @JvmOverloads constructor(
         }
     }
 
-    private fun getUncheckedOffset(currentOffset: Float): Float {
-        if (currentOffset > startDrawcheckedFalseBorderOffset)
-            throw IllegalStateException("offset should be lower than $startDrawcheckedFalseBorderOffset")
-
-        return 1 - startDrawcheckedFalseBorderOffset * (1F - currentOffset) / 100
-    }
-
     private fun initPaints() {
         checkedPaint.color = checkedColor
         checkedPaint.isAntiAlias = true
 
-        unCheckedPaint.color = unCheckedColor
-        unCheckedPaint.isAntiAlias = true
+        borderPaint.color = unCheckedColor
+        borderPaint.style = Paint.Style.STROKE
+        borderPaint.strokeWidth = strokeWidth
+        borderPaint.isAntiAlias = true
 
-        fullArea.addCircle(radus, radus, radus, Path.Direction.CW)
+        fullArea.addCircle(radius, radius, radius, Path.Direction.CW)
+    }
+
+    override fun isHardwareAccelerated(): Boolean {
+        return true
     }
 }
