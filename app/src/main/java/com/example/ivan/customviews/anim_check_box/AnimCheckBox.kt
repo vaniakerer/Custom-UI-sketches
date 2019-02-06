@@ -38,12 +38,20 @@ class AnimCheckBox @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas?) {
+        drawCircleBackground(canvas)
+        drawBorder(canvas)
+    }
+
+    private fun drawCircleBackground(canvas: Canvas?) {
         canvas?.drawCircle(
                 centerPoint.x,
                 centerPoint.y,
                 radius * checkOffset,
                 checkedPaint
         )
+    }
+
+    private fun drawBorder(canvas: Canvas?) {
         canvas?.drawCircle(centerPoint.x, centerPoint.y, radius, borderPaint)
     }
 
