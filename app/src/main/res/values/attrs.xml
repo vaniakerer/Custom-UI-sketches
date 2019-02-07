@@ -11,6 +11,15 @@
     <declare-styleable name="CircularProgressView">
         <attr name="cpv_item_color" format="color" />
         <attr name="cpv_item_offset" format="dimension" />
-        <attr name="item_side_size" format="dimension"/>
+        <attr name="item_side_size" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="AnimCheckBox">
+        <attr name="acb_border_color" format="color" />
+        <attr name="acb_checked_color" format="color" />
+        <attr name="acb_check_icon_color" format="color" />
+        <attr name="acb_border_width" format="dimension" />
+        <attr name="acb_check_icon_width" format="dimension" />
+        <attr name="acb_checked" format="boolean" />
     </declare-styleable>
 </resources>

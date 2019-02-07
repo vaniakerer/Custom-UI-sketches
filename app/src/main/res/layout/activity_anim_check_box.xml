@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
@@ -9,5 +10,25 @@
         android:id="@+id/anim_check_box"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_gravity="center" />
+        android:layout_gravity="center"
+        app:acb_border_color="@color/grey_light"
+        app:acb_border_width="3dp"
+        app:acb_check_icon_color="@color/white"
+        app:acb_check_icon_width="3dp"
+        app:acb_checked="true"
+        app:acb_checked_color="@color/colorPrimary" />
+
+
+    <com.example.ivan.customviews.anim_check_box.AnimCheckBox
+        android:id="@+id/anim_check_box_2"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="10dp"
+        app:acb_border_color="@color/colorAccent"
+        app:acb_border_width="3dp"
+        app:acb_check_icon_color="@color/white"
+        app:acb_check_icon_width="3dp"
+        app:acb_checked="true"
+        app:acb_checked_color="@color/colorPrimary" />
 </LinearLayout>
