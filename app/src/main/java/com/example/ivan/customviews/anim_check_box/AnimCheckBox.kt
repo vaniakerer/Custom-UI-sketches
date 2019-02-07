@@ -31,7 +31,7 @@ class AnimCheckBox @JvmOverloads constructor(
     private val fullArea = Path()
 
     private val checkIconPath = Path()
-    private val checIconPathMeasure = PathMeasure()
+    private val checkIconPathMeasure = PathMeasure()
 
     private val centerPoint = PointF()
 
@@ -150,6 +150,21 @@ class AnimCheckBox @JvmOverloads constructor(
             MeasureSpec.AT_MOST -> Math.min(specSize, desiredSize)
             MeasureSpec.UNSPECIFIED -> desiredSize
             else -> 0
+        }
+    }
+
+    private fun obtainAttributes(attributeSet: AttributeSet) {
+        val ta = context.obtainStyledAttributes(attributeSet, R.styleable.AnimCheckBox, 0, 0)
+        try {
+            borderColor = ta.getColor(R.styleable.AnimCheckBox_acb_border_color, Color.GRAY)
+            checkedColor = ta.getColor(R.styleable.AnimCheckBox_acb_checked_color, Color.BLUE)
+            checkIconColor = ta.getColor(R.styleable.AnimCheckBox_acb_check_icon_color, Color.WHITE)
+
+            borderWidth = ta.getDimensionPixelOffset(R.styleable.AnimCheckBox_acb_border_width, 0).toFloat()
+            checkIconWidth = ta.getDimensionPixelOffset(R.styleable.AnimCheckBox_acb_check_icon_width, 0).toFloat()
+            isChecked = ta.getBoolean(R.styleable.AnimCheckBox_acb_checked, false)
+        } finally {
+            ta.recycle()
         }
     }
 
