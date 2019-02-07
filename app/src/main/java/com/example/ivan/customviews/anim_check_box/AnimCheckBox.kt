@@ -7,22 +7,26 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import android.graphics.DashPathEffect
+import android.widget.Checkable
+import com.example.ivan.customviews.R
+import com.example.ivan.customviews.util.UiUtil
 
 
 class AnimCheckBox @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
-) : View(context, attrs, defStyleAttr) {
+) : View(context, attrs, defStyleAttr), Checkable {
 
-    private var isChecked = false
+    private var checked = false
 
-    private var checkedColor = Color.CYAN
-    private var unCheckedColor = Color.BLUE
-    private var checkIconColor = Color.WHITE
+    private var checkedColor = 0
+    private var borderColor = 0
+    private var checkIconColor = 0
 
     private var radius: Float = 0F
-    private var strokeWidth = 8F //todo hardcoded for xxhdpi
+    private var borderWidth = 0F
+    private var checkIconWidth = 0F
 
     private val checkedPaint = Paint()
     private val borderPaint = Paint()
@@ -39,18 +43,23 @@ class AnimCheckBox @JvmOverloads constructor(
 
     private var checkIconDrawOffset = 0F
 
+    private var innerDrawIconTranslation = 0
+
+    private var checkIconCornerRadiusInDp = 2F
+
     private var checkedChangeValueAnimator: ValueAnimator? = null
     private var checkIconDrawOffsetValueAnimator: ValueAnimator? = null
 
     init {
-        setOnClickListener { setChecked(!isChecked) }
+        attrs?.let { obtainAttributes(it) }
+        setOnClickListener { isChecked = !isChecked }
     }
 
     override fun onDraw(canvas: Canvas?) {
         if (canvas == null) return
 
-        drawCircleBackground(canvas)
         drawBorder(canvas)
+        drawCircleBackground(canvas)
         drawCheckIconPath(canvas)
     }
 
@@ -68,10 +77,18 @@ class AnimCheckBox @JvmOverloads constructor(
     }
 
     private fun drawCheckIconPath(canvas: Canvas) {
-        val pathLength = checIconPathMeasure.length
-        checkIconPaint.pathEffect = DashPathEffect(floatArrayOf(pathLength, pathLength),
-                Math.max(checkIconDrawOffset * pathLength, checkIconDrawOffset))
+        val pathLength = checkIconPathMeasure.length
+        canvas.save()
+        canvas.translate(-innerDrawIconTranslation.toFloat() / 3, 0F)
+
+        //todo bad solution
+        checkIconPaint.pathEffect = ComposePathEffect(
+                DashPathEffect(floatArrayOf(pathLength, pathLength),
+                        Math.max(checkIconDrawOffset * pathLength, checkIconDrawOffset)),
+                CornerPathEffect(UiUtil.dp2px(checkIconCornerRadiusInDp, context))
+        )
         canvas.drawPath(checkIconPath, checkIconPaint)
+        canvas.restore()
     }
 
     override fun onAttachedToWindow() {
@@ -91,16 +108,42 @@ class AnimCheckBox @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        radius = w / 2 - strokeWidth / 2
+
+        radius = w / 2 - borderWidth / 2
+
         centerPoint.x = (w / 2).toFloat()
         centerPoint.y = (h / 2).toFloat()
+
+        innerDrawIconTranslation = w / 6
 
         initCheckIconPath()
     }
 
-    fun setChecked(checked: Boolean) {
-        this.isChecked = checked
-        startBackgroundAnimation()
+    override fun setChecked(checked: Boolean) {
+        this.checked = checked
+        setChecked(checked, true)
+    }
+
+    override fun isChecked(): Boolean {
+        return this.checked
+    }
+
+    override fun toggle() {
+        this.checked = !isChecked
+    }
+
+    private fun setChecked(checked: Boolean, animate: Boolean) {
+        if (animate) {
+            startBackgroundAnimation()
+        } else {
+            setCheckedWithoutAnimation(checked)
+            invalidate()
+        }
+    }
+
+    private fun setCheckedWithoutAnimation(checked: Boolean) {
+        checkIconDrawOffset = if (checked) 1F else 0F
+        checkOffset = checkIconDrawOffset
     }
 
     private fun startBackgroundAnimation() {
@@ -136,7 +179,7 @@ class AnimCheckBox @JvmOverloads constructor(
             checkIconDrawOffset = it.animatedValue as Float
             invalidate()
         }
-        checkedChangeValueAnimator?.duration = 150
+        checkedChangeValueAnimator?.duration = 90
 
         checkIconDrawOffsetValueAnimator?.start()
     }
@@ -172,12 +215,12 @@ class AnimCheckBox @JvmOverloads constructor(
         checkedPaint.color = checkedColor
         checkedPaint.isAntiAlias = true
 
-        borderPaint.color = unCheckedColor
+        borderPaint.color = borderColor
         borderPaint.style = Paint.Style.STROKE
-        borderPaint.strokeWidth = strokeWidth
+        borderPaint.strokeWidth = borderWidth
         borderPaint.isAntiAlias = true
 
-        checkIconPaint.strokeWidth = 10F
+        checkIconPaint.strokeWidth = checkIconWidth
         checkIconPaint.style = Paint.Style.STROKE
         checkIconPaint.color = checkIconColor
         checkIconPaint.isAntiAlias = true
@@ -186,13 +229,12 @@ class AnimCheckBox @JvmOverloads constructor(
     }
 
     private fun initCheckIconPath() {
+        checkIconPath.reset()
 
-        //todo hardcoded values
-        checkIconPath.moveTo(centerPoint.x - 40, centerPoint.y)
-        checkIconPath.lineTo(centerPoint.x - 10, centerPoint.y + 30)
-        checkIconPath.lineTo((measuredWidth - 40).toFloat(), centerPoint.y - 40)
-
-        checIconPathMeasure.setPath(checkIconPath, false)
+        checkIconPath.moveTo(centerPoint.x - innerDrawIconTranslation, centerPoint.y)
+        checkIconPath.lineTo(centerPoint.x, centerPoint.y + innerDrawIconTranslation)
+        checkIconPath.lineTo(centerPoint.x + innerDrawIconTranslation * 1.5F, centerPoint.y - innerDrawIconTranslation)
+        checkIconPathMeasure.setPath(checkIconPath, false)
     }
 
     override fun isHardwareAccelerated(): Boolean {
