@@ -1,5 +1,6 @@
 package com.example.ivan.customviews.bottom_nav
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -17,7 +18,7 @@ class BottomNavView @JvmOverloads constructor(
     private val navigationPaint = Paint()
     private val navigationPath = Path()
 
-    private val circleRadius = 80f
+    private val circleRadius = 100f
     private val circlePadding = 10f
     private var tabWidth = 0f
 
@@ -32,10 +33,11 @@ class BottomNavView @JvmOverloads constructor(
         navigationPaint.strokeWidth = 3f
         navigationPaint.isAntiAlias = true
 
-        selectedTabCirclePaint.color = Color.CYAN
+        selectedTabCirclePaint.color = Color.RED
         selectedTabCirclePaint.isAntiAlias = true
     }
 
+    @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas?) {
 
         if (canvas == null) return
@@ -45,21 +47,12 @@ class BottomNavView @JvmOverloads constructor(
         val beziePathStartP1X = selectedTab * tabWidth
 
         navigationPath.moveTo(0f, circleRadius)
-        navigationPath.lineTo(beziePathStartP1X, circleRadius)
+        navigationPath.lineTo(100f, circleRadius)
         navigationPath.cubicTo(
-                beziePathStartP1X + circleRadius - circleRadius / 3, circleRadius,
-                beziePathStartP1X - circlePadding, circleRadius * 2,
-                beziePathStartP1X + tabWidth / 2, circleRadius * 2 + circlePadding
+                100F + circleRadius * 2 * 0.05F, circleRadius + circleRadius * 4 / 3.05F,
+                300F - circleRadius * 2 * 0.05F, circleRadius + circleRadius * 4 / 3.05F,
+                300F, circleRadius
         )
-
-        val beziePathStartP2X = beziePathStartP1X + tabWidth / 2
-
-        navigationPath.cubicTo(
-                beziePathStartP2X + tabWidth / 2 - circlePadding, circleRadius * 2,
-                beziePathStartP2X + tabWidth / 2 - circleRadius + circleRadius / 3, circleRadius,
-                beziePathStartP2X + tabWidth / 2, circleRadius
-        )
-
 
         navigationPath.lineTo(measuredWidth.toFloat(), circleRadius)
         navigationPath.lineTo(measuredWidth.toFloat(), measuredHeight.toFloat())
@@ -68,7 +61,7 @@ class BottomNavView @JvmOverloads constructor(
 
         canvas.drawPath(navigationPath, navigationPaint)
 
-        canvas.drawCircle((selectedTab + 1) * tabWidth - tabWidth / 2, circleRadius, circleRadius, selectedTabCirclePaint)
+        canvas.drawCircle(200f, circleRadius, circleRadius - 20, selectedTabCirclePaint)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
