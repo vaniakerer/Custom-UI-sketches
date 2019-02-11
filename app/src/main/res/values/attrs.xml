@@ -22,4 +22,14 @@
         <attr name="acb_check_icon_width" format="dimension" />
         <attr name="acb_checked" format="boolean" />
     </declare-styleable>
+
+    <declare-styleable name="BottomNavV2">
+        <attr name="tabs_count" format="integer" />
+        <attr name="selected_tab_circle_radius" format="dimension" />
+        <attr name="selected_tab_circle_offset" format="dimension" />
+        <attr name="selected_tab" format="integer" />
+        <attr name="tab_bar_height" format="dimension" />
+        <attr name="tab_bar_color" format="color" />
+        <attr name="selected_tab_circle_color" format="color" />
+    </declare-styleable>
 </resources>

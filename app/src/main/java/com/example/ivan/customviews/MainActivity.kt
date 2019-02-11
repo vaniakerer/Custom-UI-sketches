@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         btnBottomNav.setOnClickListener { openActivity<BottomNavActivity>() }
         btnAnimCheckBox.setOnClickListener { openActivity<AnimCheckBoxActivity>() }
 
-        openActivity<AnimCheckBoxActivity>()
+        openActivity<BottomNavActivity>()
     }
 
     private inline fun <reified T> openActivity() {
