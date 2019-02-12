@@ -48,6 +48,8 @@ public class BottomNavV2 @JvmOverloads constructor(
     private var selectedTabCurveFirstIntermediatePoint = PointF()
     private var selectedTabCurveSecondIntermediatePoint = PointF()
 
+    private var selectedTabCircleCenterPoint = PointF()
+
     private lateinit var tabBarPaint: Paint
     private lateinit var selectedTabCirclePaint: Paint
 
@@ -66,31 +68,21 @@ public class BottomNavV2 @JvmOverloads constructor(
         tabBarPath.reset()
         tabBarPath.moveTo(tabBarStartPoint.x, tabBarStartPoint.y)
         tabBarPath.lineTo(selectedTabCurveStartPoint.x, selectedTabCurveStartPoint.y)
-        /* tabBarPath.cubicTo(
-                 bizierCurveFirstPoint.x, bizierCurveFirstPoint.y,
-                 bizierCurveSecondPoint.x, bizierCurveSecondPoint.y,
-                 selectedTabEndX, selectedTabCircleRadius
-         )*/
+         tabBarPath.cubicTo(
+                 selectedTabCurveFirstIntermediatePoint.x, selectedTabCurveFirstIntermediatePoint.y,
+                 selectedTabCurveSecondIntermediatePoint.x, selectedTabCurveSecondIntermediatePoint.y,
+                 selectedTabCurveEndPoint.x, selectedTabCurveEndPoint.y
+         )
         tabBarPath.lineTo((width - paddingRight).toFloat(), selectedTabCircleRadius)
         tabBarPath.lineTo((width - paddingRight).toFloat(), height.toFloat())
         tabBarPath.lineTo(paddingLeft.toFloat(), height.toFloat())
         tabBarPath.close()
 
         canvas.drawPath(tabBarPath, tabBarPaint)
-
-        canvas.drawCircle(selectedTabStartPoint.x, selectedTabStartPoint.y, 10f, selectedTabCirclePaint)
-        canvas.drawCircle(selectedTabEndPoint.x, selectedTabEndPoint.y, 10f, selectedTabCirclePaint)
-
-        canvas.drawCircle(selectedTabCurveStartPoint.x, selectedTabCurveStartPoint.y, 15f, selectedTabCirclePaint)
-        canvas.drawCircle(selectedTabCurveEndPoint.x, selectedTabCurveEndPoint.y, 15f, selectedTabCirclePaint)
-
-        canvas.drawCircle(selectedTabCurveFirstIntermediatePoint.x, selectedTabCurveFirstIntermediatePoint.y, 20f, selectedTabCirclePaint)
-        canvas.drawCircle(selectedTabCurveSecondIntermediatePoint.x, selectedTabCurveSecondIntermediatePoint.y, 20f, selectedTabCirclePaint)
-
     }
 
     private fun drawSelectedTabCircle(canvas: Canvas) {
-
+        canvas.drawCircle(selectedTabCircleCenterPoint.x, selectedTabCircleCenterPoint.y, selectedTabCircleRadius, selectedTabCirclePaint)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -129,11 +121,14 @@ public class BottomNavV2 @JvmOverloads constructor(
         selectedTabEndPoint.x = selectedTabStartPoint.x + tabWidth
         selectedTabEndPoint.y = selectedTabCircleRadius
 
-        selectedTabCurveStartPoint.x = selectedTabStartPoint.x + (tabWidth - getCurveCircleRadius()) / 2
+        selectedTabCurveStartPoint.x = selectedTabStartPoint.x + (tabWidth - getCurveCircleRadius() * 2) / 2
         selectedTabCurveStartPoint.y = selectedTabCircleRadius
 
-        selectedTabCurveEndPoint.x = selectedTabCurveStartPoint.x + getCurveCircleRadius()
+        selectedTabCurveEndPoint.x = selectedTabCurveStartPoint.x + getCurveCircleRadius() * 2
         selectedTabCurveEndPoint.y = selectedTabCircleRadius
+
+        selectedTabCircleCenterPoint.x = selectedTabEndPoint.x - tabWidth / 2 //todo mb calculate not by tab point coordinates
+        selectedTabCircleCenterPoint.y = selectedTabCircleRadius
 
         selectedTabCurveFirstIntermediatePoint.x =
                 BezierUtil.getBezierCurveFirstIntermediatePointShiftedX(selectedTabCurveStartPoint.x,getCurveCircleDiametr())
