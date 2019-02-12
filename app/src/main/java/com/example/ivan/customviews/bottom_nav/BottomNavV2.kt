@@ -3,9 +3,9 @@ package com.example.ivan.customviews.bottom_nav
 import android.content.Context
 import android.graphics.*
 import android.graphics.Paint.ANTI_ALIAS_FLAG
+import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
-import android.view.ViewGroup
 import com.example.ivan.customviews.R
 
 public class BottomNavV2 @JvmOverloads constructor(
@@ -15,8 +15,8 @@ public class BottomNavV2 @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     companion object {
-        val BIZIER_CURVE_FIRST_POINT_X_COEF = 2 * 0.05F
-        val BIZIER_CURVE_FIRST_POINT_Y_COEF = 4 / 3.05F
+        val BIZIER_CURVE_FIRST_POINT_X_SHIFT = 2 * 0.05F
+        val BIZIER_CURVE_FIRST_POINT_Y_SHIFT = 4 / 3.05F
     }
 
     init {
@@ -40,6 +40,13 @@ public class BottomNavV2 @JvmOverloads constructor(
     private var tabBarHeight = 0F
 
     private var tabBarStartPoint = PointF()
+    private var selectedTabStartPoint = PointF()
+    private var selectedTabEndPoint = PointF()
+    private var selectedTabCurveStartPoint = PointF()
+    private var selectedTabCurveEndPoint = PointF()
+    //curve intermediate points
+    private var selectedTabCurveFirstIntermediatePoint = PointF()
+    private var selectedTabCurveSecondIntermediatePoint = PointF()
 
     private lateinit var tabBarPaint: Paint
     private lateinit var selectedTabCirclePaint: Paint
@@ -50,34 +57,20 @@ public class BottomNavV2 @JvmOverloads constructor(
         canvas?.let {
             drawTabBar(it)
             drawSelectedTabCircle(it)
+            Handler().postDelayed({ selectTab(if (selectedTab == tabsCount - 1) 0 else ++selectedTab) }, 3000)
         }
     }
 
     private fun drawTabBar(canvas: Canvas) {
-        val selectedTabStartX = (paddingLeft + selectedTab * tabWidth).toFloat()
-        val selectedTabEndX = (selectedTabStartX + tabWidth)
-
-        val curveStartX = selectedTabStartX + selectedTabCircleRadius - selectedTabCircleOffset
-        val curveEndX = curveStartX + selectedTabCircleRadius + selectedTabCircleOffset * 2
-
-        val tabBarCropCircleRadius = (selectedTabCircleRadius + selectedTabCircleOffset)
-
-        val bizierCurveFirstPoint = PointF()
-        bizierCurveFirstPoint.x = curveStartX + curveStartX * BIZIER_CURVE_FIRST_POINT_X_COEF
-        bizierCurveFirstPoint.y = tabBarCropCircleRadius + tabBarCropCircleRadius * BIZIER_CURVE_FIRST_POINT_Y_COEF
-
-        val bizierCurveSecondPoint = PointF()
-        bizierCurveSecondPoint.x = selectedTabEndX - selectedTabStartX * BIZIER_CURVE_FIRST_POINT_X_COEF
-        bizierCurveSecondPoint.y = tabBarCropCircleRadius + tabBarCropCircleRadius * BIZIER_CURVE_FIRST_POINT_Y_COEF
 
         tabBarPath.reset()
         tabBarPath.moveTo(tabBarStartPoint.x, tabBarStartPoint.y)
-        tabBarPath.lineTo(selectedTabStartX, selectedTabCircleRadius)
-        tabBarPath.cubicTo(
-                bizierCurveFirstPoint.x, bizierCurveFirstPoint.y,
-                bizierCurveSecondPoint.x, bizierCurveSecondPoint.y,
-                selectedTabEndX, selectedTabCircleRadius
-        )
+        tabBarPath.lineTo(selectedTabCurveStartPoint.x, selectedTabCurveStartPoint.y)
+        /* tabBarPath.cubicTo(
+                 bizierCurveFirstPoint.x, bizierCurveFirstPoint.y,
+                 bizierCurveSecondPoint.x, bizierCurveSecondPoint.y,
+                 selectedTabEndX, selectedTabCircleRadius
+         )*/
         tabBarPath.lineTo((width - paddingRight).toFloat(), selectedTabCircleRadius)
         tabBarPath.lineTo((width - paddingRight).toFloat(), height.toFloat())
         tabBarPath.lineTo(paddingLeft.toFloat(), height.toFloat())
@@ -85,13 +78,15 @@ public class BottomNavV2 @JvmOverloads constructor(
 
         canvas.drawPath(tabBarPath, tabBarPaint)
 
-        canvas.drawCircle(selectedTabStartX, selectedTabCircleRadius, 5f, selectedTabCirclePaint)
-        canvas.drawCircle(bizierCurveFirstPoint.x, bizierCurveFirstPoint.y, 5f, selectedTabCirclePaint)
-        canvas.drawCircle(bizierCurveSecondPoint.x, bizierCurveSecondPoint.y, 5f, selectedTabCirclePaint)
-        canvas.drawCircle(selectedTabEndX, tabBarCropCircleRadius, 5f, selectedTabCirclePaint)
+        canvas.drawCircle(selectedTabStartPoint.x, selectedTabStartPoint.y, 10f, selectedTabCirclePaint)
+        canvas.drawCircle(selectedTabEndPoint.x, selectedTabEndPoint.y, 10f, selectedTabCirclePaint)
 
-        canvas.drawCircle(curveStartX, selectedTabCircleRadius, 5f, selectedTabCirclePaint)
-        canvas.drawCircle(curveEndX, selectedTabCircleRadius, 5f, selectedTabCirclePaint)
+        canvas.drawCircle(selectedTabCurveStartPoint.x, selectedTabCurveStartPoint.y, 15f, selectedTabCirclePaint)
+        canvas.drawCircle(selectedTabCurveEndPoint.x, selectedTabCurveEndPoint.y, 15f, selectedTabCirclePaint)
+
+        canvas.drawCircle(selectedTabCurveFirstIntermediatePoint.x, selectedTabCurveFirstIntermediatePoint.y, 20f, selectedTabCirclePaint)
+        canvas.drawCircle(selectedTabCurveSecondIntermediatePoint.x, selectedTabCurveSecondIntermediatePoint.y, 20f, selectedTabCirclePaint)
+
     }
 
     private fun drawSelectedTabCircle(canvas: Canvas) {
@@ -114,6 +109,52 @@ public class BottomNavV2 @JvmOverloads constructor(
         )
     }
 
+    public fun selectTab(tabNumber: Int) {
+        setSelectedTab(tabNumber)
+        invalidateTabPoints()
+        invalidate()
+    }
+
+    private fun setSelectedTab(tabNumber: Int) {
+        if (tabNumber > tabsCount - 1 || tabNumber < 0)
+            throw IllegalArgumentException("Invalid tab number. Max = ${tabsCount - 1}, Min = 0")
+        selectedTab = tabNumber
+    }
+
+    private fun invalidateTabPoints() {
+
+        selectedTabStartPoint.x = (tabWidth * selectedTab + paddingRight).toFloat()
+        selectedTabStartPoint.y = selectedTabCircleRadius
+
+        selectedTabEndPoint.x = selectedTabStartPoint.x + tabWidth
+        selectedTabEndPoint.y = selectedTabCircleRadius
+
+        selectedTabCurveStartPoint.x = selectedTabStartPoint.x + (tabWidth - getCurveCircleRadius()) / 2
+        selectedTabCurveStartPoint.y = selectedTabCircleRadius
+
+        selectedTabCurveEndPoint.x = selectedTabCurveStartPoint.x + getCurveCircleRadius()
+        selectedTabCurveEndPoint.y = selectedTabCircleRadius
+
+        selectedTabCurveFirstIntermediatePoint.x =
+                BezierUtil.getBezierCurveFirstIntermediatePointShiftedX(selectedTabCurveStartPoint.x,getCurveCircleDiametr())
+        selectedTabCurveFirstIntermediatePoint.y =
+                BezierUtil.getBezierCurveFirstIntermediatePointShiftedY(selectedTabCurveStartPoint.y, getCurveCircleRadius())
+
+        selectedTabCurveSecondIntermediatePoint.x =
+                BezierUtil.getBezierCurveSecondIntermediatePointShiftedX(selectedTabCurveEndPoint.x, getCurveCircleDiametr())
+        selectedTabCurveSecondIntermediatePoint.y =
+                BezierUtil.getBezierCurveSecondIntermediatePointShiftedY(selectedTabCurveEndPoint.y, getCurveCircleRadius())
+    }
+
+
+    //return draw tabBar size with excluded vertical offsets
+    private fun getTabBarWidth() = width - paddingRight - paddingLeft
+
+    //return full cropped tab bar circle radius
+    private fun getCurveCircleRadius() = selectedTabCircleRadius + selectedTabCircleOffset
+
+    private fun getCurveCircleDiametr() = getCurveCircleRadius() * 2
+
     private fun measureSize(desiredSize: Int, measuredSpec: Int): Int {
         val measureSize = MeasureSpec.getSize(measuredSpec)
         val measureMode = MeasureSpec.getMode(measuredSpec)
@@ -131,7 +172,7 @@ public class BottomNavV2 @JvmOverloads constructor(
 
         try {
             tabsCount = typedArray.getInteger(R.styleable.BottomNavV2_tabs_count, 0)
-            selectedTab = typedArray.getInteger(R.styleable.BottomNavV2_selected_tab, -1)
+            setSelectedTab(typedArray.getInteger(R.styleable.BottomNavV2_selected_tab, -1))
             selectedTabCircleRadius = typedArray.getDimension(R.styleable.BottomNavV2_selected_tab_circle_radius, 0F)
             selectedTabCircleDiametr = selectedTabCircleRadius * 2
             selectedTabCircleOffset = typedArray.getDimension(R.styleable.BottomNavV2_selected_tab_circle_offset, 0F)
@@ -145,7 +186,7 @@ public class BottomNavV2 @JvmOverloads constructor(
 
     private fun checkObtainedAttributes() {
         if (tabsCount <= 0) throw IllegalArgumentException("Tabs count must be > 0")
-        if (selectedTab <= 0 || selectedTab >= tabsCount) throw IllegalArgumentException("Incorect tabs cunt value. Tabs count should be > 0 and < ${tabsCount - 1}")
+        if (selectedTab <= 0 || selectedTab >= tabsCount) throw IllegalArgumentException("Incorrect tabs cunt value. Tabs count should be > 0 and < ${tabsCount - 1}")
         if (selectedTabCircleRadius <= 0) throw IllegalArgumentException("Circle radius must be > 0")
         if (selectedTabCircleOffset <= 0) throw IllegalArgumentException("Circle offset must be > 0")
         if (tabBarHeight <= 0) throw IllegalArgumentException("Tab bar height must be > 0")

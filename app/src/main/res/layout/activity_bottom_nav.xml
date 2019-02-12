@@ -8,11 +8,11 @@
 
     <com.example.ivan.customviews.bottom_nav.BottomNavV2
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="150dp"
         app:selected_tab="1"
         app:selected_tab_circle_color="@color/colorPrimary"
         app:selected_tab_circle_offset="5dp"
-        app:selected_tab_circle_radius="40dp"
+        app:selected_tab_circle_radius="50dp"
         app:tab_bar_color="@color/colorAccent"
         app:tab_bar_height="100dp"
         app:tabs_count="3" />
