@@ -16,7 +16,7 @@ public class BottomNavV2 @JvmOverloads constructor(
 
     companion object {
         val BIZIER_CURVE_FIRST_POINT_X_SHIFT = 2 * 0.05F
-        val BIZIER_CURVE_FIRST_POINT_Y_SHIFT = 4 / 3.05F
+        val BIZIER_CURVE_FIRST_POINT_Y_SHIFT = 4 / 3.1F
     }
 
     init {
