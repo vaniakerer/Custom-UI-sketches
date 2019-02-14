@@ -5,6 +5,8 @@ import android.graphics.*
 import android.graphics.Paint.ANTI_ALIAS_FLAG
 import android.os.Handler
 import android.util.AttributeSet
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import com.example.ivan.customviews.R
 
@@ -16,7 +18,7 @@ public class BottomNavV2 @JvmOverloads constructor(
 
     companion object {
         val BIZIER_CURVE_FIRST_POINT_X_SHIFT = 2 * 0.05F
-        val BIZIER_CURVE_FIRST_POINT_Y_SHIFT = 4 / 3.05F
+        val BIZIER_CURVE_FIRST_POINT_Y_SHIFT = 4 / 3.1F
     }
 
     init {
@@ -39,7 +41,10 @@ public class BottomNavV2 @JvmOverloads constructor(
     private var selectedTabCircleOffset = 0F
     private var tabBarHeight = 0F
 
-    private var tabBarStartPoint = PointF()
+    private var tabBarStartPoint = PointF() // top|left
+    private var tabBarEndPoint = PointF() // bottom|right
+    private var tabBarRect = RectF()
+
     private var selectedTabStartPoint = PointF()
     private var selectedTabEndPoint = PointF()
     private var selectedTabCurveStartPoint = PointF()
@@ -55,27 +60,32 @@ public class BottomNavV2 @JvmOverloads constructor(
 
     private val tabBarPath = Path()
 
+    private val gestureDetectorListener = GestureListener()
+    private val gestureDetector = GestureDetector(context, gestureDetectorListener)
+
     override fun onDraw(canvas: Canvas?) {
         canvas?.let {
             drawTabBar(it)
             drawSelectedTabCircle(it)
-            Handler().postDelayed({ selectTab(if (selectedTab == tabsCount - 1) 0 else ++selectedTab) }, 3000)
         }
     }
 
     private fun drawTabBar(canvas: Canvas) {
 
+        tabBarPaint.pathEffect = CornerPathEffect(20F)
+
         tabBarPath.reset()
         tabBarPath.moveTo(tabBarStartPoint.x, tabBarStartPoint.y)
         tabBarPath.lineTo(selectedTabCurveStartPoint.x, selectedTabCurveStartPoint.y)
-         tabBarPath.cubicTo(
-                 selectedTabCurveFirstIntermediatePoint.x, selectedTabCurveFirstIntermediatePoint.y,
-                 selectedTabCurveSecondIntermediatePoint.x, selectedTabCurveSecondIntermediatePoint.y,
-                 selectedTabCurveEndPoint.x, selectedTabCurveEndPoint.y
-         )
+        tabBarPath.lineTo(selectedTabCurveStartPoint.x, selectedTabCurveStartPoint.y)
+        tabBarPath.cubicTo(
+                selectedTabCurveFirstIntermediatePoint.x, selectedTabCurveFirstIntermediatePoint.y,
+                selectedTabCurveSecondIntermediatePoint.x, selectedTabCurveSecondIntermediatePoint.y,
+                selectedTabCurveEndPoint.x, selectedTabCurveEndPoint.y
+        )
         tabBarPath.lineTo((width - paddingRight).toFloat(), selectedTabCircleRadius)
         tabBarPath.lineTo((width - paddingRight).toFloat(), height.toFloat())
-        tabBarPath.lineTo(paddingLeft.toFloat(), height.toFloat())
+        tabBarPath.lineTo(tabBarStartPoint.x, height.toFloat())
         tabBarPath.close()
 
         canvas.drawPath(tabBarPath, tabBarPaint)
@@ -90,6 +100,15 @@ public class BottomNavV2 @JvmOverloads constructor(
 
         tabBarStartPoint.x = paddingLeft.toFloat()
         tabBarStartPoint.y = paddingTop + selectedTabCircleRadius
+
+        tabBarEndPoint.x = (width - paddingRight).toFloat()
+        tabBarEndPoint.y = (height - paddingBottom).toFloat()
+
+        tabBarRect.left = paddingLeft.toFloat()
+        tabBarRect.top = tabBarHeight
+        tabBarRect.right = width - paddingRight.toFloat()
+        tabBarRect.bottom = paddingBottom.toFloat()
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -101,6 +120,13 @@ public class BottomNavV2 @JvmOverloads constructor(
         )
     }
 
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        return if (gestureDetector.onTouchEvent(event))
+            true
+        else
+            super.onTouchEvent(event)
+    }
+
     public fun selectTab(tabNumber: Int) {
         setSelectedTab(tabNumber)
         invalidateTabPoints()
@@ -109,8 +135,12 @@ public class BottomNavV2 @JvmOverloads constructor(
 
     private fun setSelectedTab(tabNumber: Int) {
         if (tabNumber > tabsCount - 1 || tabNumber < 0)
-            throw IllegalArgumentException("Invalid tab number. Max = ${tabsCount - 1}, Min = 0")
+            throw IllegalArgumentException("Invalid tab number $tabNumber. Max = ${tabsCount - 1}, Min = 0")
         selectedTab = tabNumber
+    }
+
+    private fun handleTapOnTabBar(motionEvent: MotionEvent) {
+
     }
 
     private fun invalidateTabPoints() {
@@ -131,7 +161,7 @@ public class BottomNavV2 @JvmOverloads constructor(
         selectedTabCircleCenterPoint.y = selectedTabCircleRadius
 
         selectedTabCurveFirstIntermediatePoint.x =
-                BezierUtil.getBezierCurveFirstIntermediatePointShiftedX(selectedTabCurveStartPoint.x,getCurveCircleDiametr())
+                BezierUtil.getBezierCurveFirstIntermediatePointShiftedX(selectedTabCurveStartPoint.x, getCurveCircleDiametr())
         selectedTabCurveFirstIntermediatePoint.y =
                 BezierUtil.getBezierCurveFirstIntermediatePointShiftedY(selectedTabCurveStartPoint.y, getCurveCircleRadius())
 
@@ -195,5 +225,26 @@ public class BottomNavV2 @JvmOverloads constructor(
         selectedTabCirclePaint = Paint(ANTI_ALIAS_FLAG)
         selectedTabCirclePaint.style = Paint.Style.FILL //todo make fill and stroke style
         selectedTabCirclePaint.color = selectedTabCircleColor
+    }
+
+    inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+
+        override fun onSingleTapUp(e: MotionEvent?): Boolean {
+            e ?: return super.onSingleTapUp(e)
+            if (TabBarUtil.isTapOnTabBar(tabBarStartPoint, tabBarEndPoint, e)) {
+                selectTab(
+                        TabBarUtil.getTappedTabPosition(tabBarRect, tabBarStartPoint, e, tabsCount)
+                )
+            }
+            return super.onSingleTapUp(e)
+        }
+
+        override fun onDown(e: MotionEvent?): Boolean {
+            return true
+        }
+
+        override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+            return super.onScroll(e1, e2, distanceX, distanceY)
+        }
     }
 }
