@@ -14,10 +14,10 @@
         android:paddingRight="20dp"
         app:selected_tab_circle_color="@color/colorPrimary"
         app:selected_tab_circle_offset="5dp"
-        app:selected_tab_circle_radius="30dp"
+        app:selected_tab_circle_radius="25dp"
         app:tab_bar_color="@color/colorAccent"
         app:tab_bar_height="50dp"
-        app:tabs_count="3" />
+        app:tabs_count="4" />
 
     <com.example.ivan.customviews.bottom_nav.BottomNavView
         android:layout_width="match_parent"

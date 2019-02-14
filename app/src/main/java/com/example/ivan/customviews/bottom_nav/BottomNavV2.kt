@@ -41,7 +41,8 @@ public class BottomNavV2 @JvmOverloads constructor(
     private var selectedTabCircleOffset = 0F
     private var tabBarHeight = 0F
 
-    private var tabBarStartPoint = PointF()
+    private var tabBarStartPoint = PointF() // top|left
+    private var tabBarEndPoint = PointF() // bottom|right
     private var tabBarRect = RectF()
 
     private var selectedTabStartPoint = PointF()
@@ -66,7 +67,6 @@ public class BottomNavV2 @JvmOverloads constructor(
         canvas?.let {
             drawTabBar(it)
             drawSelectedTabCircle(it)
-            Handler().postDelayed({ selectTab(if (selectedTab == tabsCount - 1) 0 else ++selectedTab) }, 3000)
         }
     }
 
@@ -101,10 +101,14 @@ public class BottomNavV2 @JvmOverloads constructor(
         tabBarStartPoint.x = paddingLeft.toFloat()
         tabBarStartPoint.y = paddingTop + selectedTabCircleRadius
 
+        tabBarEndPoint.x = (width - paddingRight).toFloat()
+        tabBarEndPoint.y = (height - paddingBottom).toFloat()
+
         tabBarRect.left = paddingLeft.toFloat()
         tabBarRect.top = tabBarHeight
         tabBarRect.right = width - paddingRight.toFloat()
         tabBarRect.bottom = paddingBottom.toFloat()
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -133,6 +137,10 @@ public class BottomNavV2 @JvmOverloads constructor(
         if (tabNumber > tabsCount - 1 || tabNumber < 0)
             throw IllegalArgumentException("Invalid tab number $tabNumber. Max = ${tabsCount - 1}, Min = 0")
         selectedTab = tabNumber
+    }
+
+    private fun handleTapOnTabBar(motionEvent: MotionEvent) {
+
     }
 
     private fun invalidateTabPoints() {
@@ -223,7 +231,11 @@ public class BottomNavV2 @JvmOverloads constructor(
 
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
             e ?: return super.onSingleTapUp(e)
-            selectTab(Math.round(width - width / e.getX()))
+            if (TabBarUtil.isTapOnTabBar(tabBarStartPoint, tabBarEndPoint, e)) {
+                selectTab(
+                        TabBarUtil.getTappedTabPosition(tabBarRect, tabBarStartPoint, e, tabsCount)
+                )
+            }
             return super.onSingleTapUp(e)
         }
 
