@@ -1,5 +1,6 @@
 package com.example.ivan.customviews.bottom_nav
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.graphics.Paint.ANTI_ALIAS_FLAG
@@ -62,6 +63,8 @@ public class BottomNavV2 @JvmOverloads constructor(
 
     private val gestureDetectorListener = GestureListener()
     private val gestureDetector = GestureDetector(context, gestureDetectorListener)
+
+    private var selectedItemValueAnimator: ValueAnimator? = null
 
     override fun onDraw(canvas: Canvas?) {
         canvas?.let {
@@ -130,7 +133,6 @@ public class BottomNavV2 @JvmOverloads constructor(
     public fun selectTab(tabNumber: Int) {
         setSelectedTab(tabNumber)
         invalidateTabPoints()
-        invalidate()
     }
 
     private fun setSelectedTab(tabNumber: Int) {
@@ -145,30 +147,36 @@ public class BottomNavV2 @JvmOverloads constructor(
 
     private fun invalidateTabPoints() {
 
-        selectedTabStartPoint.x = (tabWidth * selectedTab + paddingRight).toFloat()
-        selectedTabStartPoint.y = selectedTabCircleRadius
+        selectedItemValueAnimator?.cancel()
+        selectedItemValueAnimator = ValueAnimator.ofFloat(selectedTabStartPoint.x, (tabWidth * selectedTab + paddingRight).toFloat())
+        selectedItemValueAnimator?.addUpdateListener {
+            selectedTabStartPoint.x = it.animatedValue as Float
+            selectedTabStartPoint.y = selectedTabCircleRadius
 
-        selectedTabEndPoint.x = selectedTabStartPoint.x + tabWidth
-        selectedTabEndPoint.y = selectedTabCircleRadius
+            selectedTabEndPoint.x = selectedTabStartPoint.x + tabWidth
+            selectedTabEndPoint.y = selectedTabCircleRadius
 
-        selectedTabCurveStartPoint.x = selectedTabStartPoint.x + (tabWidth - getCurveCircleRadius() * 2) / 2
-        selectedTabCurveStartPoint.y = selectedTabCircleRadius
+            selectedTabCurveStartPoint.x = selectedTabStartPoint.x + (tabWidth - getCurveCircleRadius() * 2) / 2
+            selectedTabCurveStartPoint.y = selectedTabCircleRadius
 
-        selectedTabCurveEndPoint.x = selectedTabCurveStartPoint.x + getCurveCircleRadius() * 2
-        selectedTabCurveEndPoint.y = selectedTabCircleRadius
+            selectedTabCurveEndPoint.x = selectedTabCurveStartPoint.x + getCurveCircleRadius() * 2
+            selectedTabCurveEndPoint.y = selectedTabCircleRadius
 
-        selectedTabCircleCenterPoint.x = selectedTabEndPoint.x - tabWidth / 2 //todo mb calculate not by tab point coordinates
-        selectedTabCircleCenterPoint.y = selectedTabCircleRadius
+            selectedTabCircleCenterPoint.x = selectedTabEndPoint.x - tabWidth / 2 //todo mb calculate not by tab point coordinates
+            selectedTabCircleCenterPoint.y = selectedTabCircleRadius
 
-        selectedTabCurveFirstIntermediatePoint.x =
-                BezierUtil.getBezierCurveFirstIntermediatePointShiftedX(selectedTabCurveStartPoint.x, getCurveCircleDiametr())
-        selectedTabCurveFirstIntermediatePoint.y =
-                BezierUtil.getBezierCurveFirstIntermediatePointShiftedY(selectedTabCurveStartPoint.y, getCurveCircleRadius())
+            selectedTabCurveFirstIntermediatePoint.x =
+                    BezierUtil.getBezierCurveFirstIntermediatePointShiftedX(selectedTabCurveStartPoint.x, getCurveCircleDiametr())
+            selectedTabCurveFirstIntermediatePoint.y =
+                    BezierUtil.getBezierCurveFirstIntermediatePointShiftedY(selectedTabCurveStartPoint.y, getCurveCircleRadius())
 
-        selectedTabCurveSecondIntermediatePoint.x =
-                BezierUtil.getBezierCurveSecondIntermediatePointShiftedX(selectedTabCurveEndPoint.x, getCurveCircleDiametr())
-        selectedTabCurveSecondIntermediatePoint.y =
-                BezierUtil.getBezierCurveSecondIntermediatePointShiftedY(selectedTabCurveEndPoint.y, getCurveCircleRadius())
+            selectedTabCurveSecondIntermediatePoint.x =
+                    BezierUtil.getBezierCurveSecondIntermediatePointShiftedX(selectedTabCurveEndPoint.x, getCurveCircleDiametr())
+            selectedTabCurveSecondIntermediatePoint.y =
+                    BezierUtil.getBezierCurveSecondIntermediatePointShiftedY(selectedTabCurveEndPoint.y, getCurveCircleRadius())
+            invalidate()
+        }
+        selectedItemValueAnimator?.start()
     }
 
 
