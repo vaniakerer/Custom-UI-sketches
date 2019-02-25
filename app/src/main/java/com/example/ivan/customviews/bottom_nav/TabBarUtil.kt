@@ -28,7 +28,6 @@ class TabBarUtil {
 
             // calculating width from tap event to start of tabBar
             val pointWidthFromTabBarStart = tapEvent.x - tabBarStartPoint.x
-
             return (((pointWidthFromTabBarStart / tabBarRect.width())) * tabsCount).toInt()
         }
     }
